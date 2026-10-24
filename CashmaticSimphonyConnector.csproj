@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--Project was exported from assembly: C:\Progetti\CashMatic\CashmaticSimphonyConnector.dll-->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A30CD7EF-57C7-477E-B99E-4050A6109318}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AssemblyName>CashmaticSimphonyConnector</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <ApplicationVersion>1.0.0.10</ApplicationVersion>
+    <FileAlignment>512</FileAlignment>
+    <RootNamespace>CashmaticSimphonyConnector</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ExtensibilityServiceHandler">
+      <HintPath>..\..\..\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensibilityServiceHandler.dll</HintPath>
+    </Reference>
+    <Reference Include="Micros.Core">
+      <HintPath>..\..\..\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\Micros.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Ops">
+      <HintPath>..\..\..\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\Ops.dll</HintPath>
+    </Reference>
+    <Reference Include="PosCommonClasses">
+      <HintPath>..\..\..\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\PosCommonClasses.dll</HintPath>
+    </Reference>
+    <Reference Include="PosCore">
+      <HintPath>..\..\..\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\PosCore.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Application.cs" />
+    <Compile Include="ApplicationFactory.cs" />
+    <Compile Include="Source\CashmaticApi.cs" />
+    <Compile Include="Models\Settings.cs" />
+    <Compile Include="Models\Transaction.cs" />
+    <Compile Include="Models\Translations.cs" />
+    <Compile Include="Exceptions\CashmaticApiException.cs" />
+    <Compile Include="Exceptions\CredentialsInvalidException.cs" />
+    <Compile Include="Exceptions\DeviceNotConnectedException.cs" />
+    <Compile Include="Exceptions\DeviceTimeoutException.cs" />
+    <Compile Include="DialogsContext\PaymentDialogContext.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dialogs\PaymentDialog.html" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /y "CashmaticSimphonyConnector.dll" "C:\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector"
+attrib +R "C:\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector\CashmaticSimphonyConnector.dll"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>attrib -R "C:\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector\CashmaticSimphonyConnector.dll"</PreBuildEvent>
+  </PropertyGroup>
+</Project>

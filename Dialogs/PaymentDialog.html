@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link href="Simphony/POSTheme.css" rel="stylesheet" type="text/css" />
+    <script src="Simphony/POSDialogAPI.js" charset="UTF-8"></script>
+
+    <style>
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            user-select: none;
+        }
+
+        .main {
+            height: 100%;
+            width: 100%;
+            display: table;
+        }
+
+        .wrapper {
+            display: table-cell;
+            height: 100%;
+            vertical-align: middle;
+        }
+
+        #btn_cancel_payment:hover {
+            cursor: pointer;
+            background-color: #A01220;
+        }
+
+        #btn_ok:hover {
+            cursor: pointer;
+            background-color: green;
+        }
+    </style>
+
+    <script>
+
+        var timeoutUpdate;
+        var currencySuffix = "";
+
+        function loadTranslations() {
+            runContextMethod('GetLblRequested', (r) => setElem('lbl_requested', r));
+            runContextMethod('GetLblInserted', (r) => setElem('lbl_inserted', r));
+            runContextMethod('GetLblDispensed', (r) => setElem('lbl_dispensed', r));
+            runContextMethod('GetLblNotDispensed', (r) => setElem('lbl_not_dispensed', r));
+            runContextMethod('GetLblCancel', (r) => setElem('btn_cancel_payment', r));
+            runContextMethod('GetLblOk', (r) => setElem('btn_ok', r));
+        }
+
+        function refreshUI() {
+            runContextMethod('GetRequested', (r) => setAmountElem('requested', r));
+            runContextMethod('GetInserted', (r) => setAmountElem('inserted', r));
+            runContextMethod('GetDispensed', (r) => setAmountElem('dispensed', r));
+            runContextMethod('GetNotDispensed', (r) => setAmountElem('not_dispensed', r));
+            runContextMethod('GetCloseWindow', (r) => processWindowsClose(r));
+            runContextMethod('CanCancel', (r) => processCanCancel(r));
+            runContextMethod('GetNotDispensedWarning', (r) => processConfirmRequest(r));
+
+            timeoutUpdate = setTimeout(refreshUI, 250);
+        }
+
+        function onload() {
+            loadTranslations();
+            runContextMethod('GetCurrency', (r) => {
+                currencySuffix = r ? " " + r : "";
+                refreshUI();
+            });
+        }
+
+        function cancelClick() {
+            runContextMethod('BtnCancelClick', (r) => { });
+        }
+
+        function safeExitClick() {
+            runContextMethod('BtnSafeExitClick', (r) => { });
+        }
+
+        function okClick() {
+            runContextMethod('BtnNotDispensedOkClick', (r) => { });
+        }
+
+        function runContextMethod(method, callback) {
+            let parms = new SimphonyPOSAPI_ContextMethodParameters();
+            parms.method = method;
+            return SimphonyPOSAPI.runContextMethod(parms, (parmsOut) => processResponse(parmsOut, callback));
+        }
+
+        function processResponse(parmsOut, callback) {
+            if (parmsOut.isSuccess()) {
+                if (callback)
+                    callback(parmsOut.response);
+            }
+            else if (parmsOut.isError())
+                alert('Error: ' + parmsOut.response);
+            else if (parmsOut.isTimeout())
+                alert('Timeout');
+        }
+
+        function setElem(id, data) {
+            document.getElementById(id).innerText = data;
+        }
+
+        function setAmountElem(id, data) {
+            document.getElementById(id).innerText = data + currencySuffix;
+        }
+
+        function processWindowsClose(data) {
+            if (data != true) {
+                return;
+            }
+
+            clearTimeout(timeoutUpdate);
+
+            if (SimphonyPOSAPI.DebugMode)
+                setTimeout(function () { window.close(); }, 250);
+
+            SimphonyPOSAPI.closeDialog("completed");
+        }
+
+        function processCanCancel(data) {
+            document.getElementById('btn_cancel_payment').hidden = !data;
+        }
+
+        function processConfirmRequest(data) {
+            document.getElementById('btn_ok').hidden = !data;
+        }
+    </script>
+
+</head>
+
+<body onload="onload()" style="color: white;">
+
+    <div class="main">
+        <div class="wrapper">
+            <div style="display: flex; flex-direction: column; text-align: center; width: fit-content; margin: auto; padding: 32px; border-radius: 16px; background-color: rgba(0, 32, 91, 1); ">
+                <div style="margin: 0 auto; " onclick="safeExitClick()">
+                    <div style="margin-bottom: 32px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="296" height="36" viewBox="0 0 332 42" xml:space="preserve">
+                        <defs></defs>
+                        <g transform="matrix(1 0 0 1 166.5 21.5)">
+                        <g style="">
+                        <g transform="matrix(1 0 0 1 -70 0.15)" id="Livello_1">
+                        <path style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-351.01, -297.65)" d="m 351.99 318.89 c -3.15 0 -6.24 -0.54 -9.27 -1.62 c -2.79 -1 -5.35 -2.49 -7.67 -4.47 l -0.1 -1.11 l 4.39 -5.26 l 1.08 -0.12 c 1.7 1.32 3.45 2.38 5.23 3.2 c 1.99 0.91 4.16 1.36 6.52 1.36 c 1.89 0 3.35 -0.34 4.4 -1.03 c 1.04 -0.69 1.56 -1.64 1.56 -2.86 v -0.12 c 0 -0.59 -0.11 -1.11 -0.33 -1.56 c -0.22 -0.45 -0.63 -0.88 -1.24 -1.27 c -0.61 -0.39 -1.46 -0.79 -2.55 -1.18 c -1.09 -0.39 -2.5 -0.81 -4.23 -1.24 c -2.09 -0.51 -3.99 -1.08 -5.68 -1.71 c -1.7 -0.63 -3.14 -1.41 -4.32 -2.33 c -1.18 -0.92 -2.1 -2.08 -2.75 -3.45 c -0.65 -1.38 -0.98 -3.09 -0.98 -5.14 v -0.12 c 0 -1.89 0.35 -3.59 1.06 -5.11 c 0.7 -1.51 1.69 -2.82 2.96 -3.93 c 1.27 -1.1 2.79 -1.95 4.55 -2.54 c 1.76 -0.59 3.71 -0.89 5.83 -0.89 c 3.03 0 5.82 0.45 8.35 1.36 c 2.3 0.82 4.43 1.96 6.39 3.43 l 0.18 1.08 l -3.86 5.6 l -1.07 0.22 c -1.63 -1.06 -3.23 -1.92 -4.8 -2.56 c -1.77 -0.73 -3.54 -1.09 -5.31 -1.09 s -3.1 0.35 -3.99 1.03 c -0.89 0.69 -1.33 1.55 -1.33 2.57 v 0.12 c 0 0.67 0.13 1.25 0.38 1.74 c 0.26 0.49 0.72 0.94 1.39 1.33 c 0.67 0.39 1.59 0.77 2.75 1.12 c 1.16 0.35 2.63 0.77 4.41 1.24 c 2.09 0.55 3.96 1.17 5.59 1.86 c 1.64 0.69 3.02 1.52 4.14 2.48 c 1.12 0.97 1.97 2.1 2.54 3.39 c 0.57 1.3 0.86 2.85 0.86 4.66 v 0.12 c 0 2.05 -0.37 3.87 -1.11 5.46 c -0.74 1.59 -1.78 2.93 -3.11 4.01 c -1.33 1.08 -2.92 1.91 -4.76 2.48 c -1.84 0.57 -3.89 0.86 -6.13 0.86 Z" stroke-linecap="round" />
+                         </g>
+                        <g transform="matrix(1 0 0 1 -31.55 0.15)" id="Livello_1">
+                        <path style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-389.45, -297.65)" d="m 372.75 276.98 h 7.52 l 0.79 0.79 v 14.78 l 0.79 0.79 h 15.2 l 0.79 -0.79 v -14.78 l 0.79 -0.79 h 7.52 l 0.79 0.79 v 39.75 l -0.79 0.79 h -7.52 l -0.79 -0.79 v -15.02 l -0.79 -0.79 h -15.2 l -0.79 0.79 v 15.02 l -0.79 0.79 h -7.52 l -0.79 -0.79 v -39.75 l 0.79 -0.79 Z" stroke-linecap="round" />
+                         </g>
+                        <g transform="matrix(1 0 0 1 91.21 0.14)" id="Livello_1">
+                        <path style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-512.21, -297.64)" d="m 506.88 285.36 h -11 l -0.79 -0.79 v -6.81 l 0.79 -0.79 h 32.67 l 0.79 0.79 v 6.81 l -0.79 0.79 h -11 l -0.79 0.79 v 31.37 l -0.79 0.79 h -7.52 l -0.79 -0.79 v -31.37 l -0.79 -0.79 Z" stroke-linecap="round" />
+                         </g>
+                        <g transform="matrix(1 0 0 1 117.42 0.15)" id="Livello_1">
+                        <path style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-538.43, -297.65)" d="m 534.67 276.98 h 7.52 l 0.79 0.79 v 39.75 l -0.79 0.79 h -7.52 l -0.79 -0.79 v -39.75 l 0.79 -0.79 Z" stroke-linecap="round" />
+                         </g>
+                        <g transform="matrix(1 0 0 1 159.28 0.14)" id="Livello_1">
+                        <path style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-580.28, -297.64)" d="m 586.57 297.64 c 0 3.47 -2.82 6.29 -6.29 6.29 s -6.29 -2.81 -6.29 -6.29 s 2.82 -6.29 6.29 -6.29 s 6.29 2.81 6.29 6.29" stroke-linecap="round" />
+                         </g>
+                        <g transform="matrix(1 0 0 1 144.11 0.16)" id="Livello_1">
+                        <path style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-565.12, -297.66)" d="m 558.39 301.54 v 7.89 l 0.79 0.79 h 20.86 l 0.79 0.79 v 6.52 l -0.79 0.79 h -29.84 l -0.79 -0.79 v -39.75 l 0.79 -0.79 h 29.54 l 0.79 0.79 v 6.52 l -0.79 0.79 h -20.57 l -0.79 0.79 v 15.69 Z" stroke-linecap="round" />
+                         </g>
+                        <g transform="matrix(1 0 0 1 -149.98 0.16)" id="Livello_1">
+                        <path style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-271.02, -297.66)" d="m 264.29 301.54 v 7.89 l 0.79 0.79 h 20.86 l 0.79 0.79 v 6.52 l -0.79 0.79 h -29.84 l -0.79 -0.79 v -39.75 l 0.79 -0.79 h 29.54 l 0.79 0.79 v 6.52 l -0.79 0.79 h -20.57 l -0.79 0.79 v 15.69 Z" stroke-linecap="round" />
+                         </g>
+                        <g transform="matrix(1 0 0 1 57.66 0.14)" id="Livello_1">
+                        <path style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-478.66, -297.64)" d="m 483.18 277.46 l 16.92 39.75 l -0.72 1.09 h -7.79 l -0.73 -0.49 l -3.38 -8.29 l -0.73 -0.49 h -16.42 l -0.73 0.49 l -3.38 8.29 l -0.73 0.49 h -7.55 l -0.72 -1.09 l 16.92 -39.75 l 0.72 -0.48 h 7.6 l 0.72 0.48 Z m 0.41 22.47 l -4.32 -10.54 h -1.45 l -4.32 10.54 c 0.31 0.46 0.42 0.62 0.73 1.08 h 8.64 c 0.31 -0.46 0.42 -0.62 0.73 -1.08 Z" stroke-linecap="round" />
+                         </g>
+                        <g transform="matrix(1 0 0 1 -109.69 0.14)" id="Livello_1">
+                        <path style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-311.32, -297.64)" d="m 315.84 277.46 l 16.92 39.75 l -0.72 1.09 h -7.79 l -0.73 -0.49 l -3.38 -8.29 l -0.73 -0.49 h -16.42 l -0.73 0.49 l -3.38 8.29 l -0.73 0.49 h -7.55 l -0.72 -1.09 l 16.92 -39.75 l 0.72 -0.48 h 7.6 l 0.72 0.48 Z m 0.41 22.47 l -4.32 -10.54 h -1.45 l -4.32 10.54 c 0.31 0.46 0.42 0.62 0.73 1.08 h 8.64 c 0.31 -0.46 0.42 -0.62 0.73 -1.08 Z" stroke-linecap="round" />
+                         </g>
+                        <g transform="matrix(1 0 0 1 12.38 0.14)" id="Livello_1">
+                        <polygon style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" points="19.88,-20.66 11.3,-20.66 10.63,-20.29 0.67,-4.26 -0.66,-4.26 -10.63,-20.29 -11.3,-20.66 -19.88,-20.66 -20.66,-19.88 -20.66,19.88 -19.88,20.66 -12.47,20.66 -11.69,19.88 -11.69,-3.52 -10.25,-3.95 -0.66,10.36 -0.66,10.36 0.67,10.36 10.25,-4.13 11.69,-3.7 11.69,19.88 12.48,20.66 19.88,20.66 20.67,19.88 20.67,-19.88 19.88,-20.66 " />
+                         </g>
+                      </g>
+                   </g>
+                </svg>
+                </div>
+
+                <div style="display: flex; padding: .3em; justify-content: space-between;">
+                    <div id="lbl_requested">Requested:</div>
+                        <div id="requested" style="margin-left: 1.5em;">0.00</div>
+                </div>
+                <div style="display: flex; padding: .3em; justify-content: space-between;">
+                    <div id="lbl_inserted">Inserted:</div>
+                    <div id="inserted" style="margin-left: 1.5em;">0.00</div>
+                </div>
+                <div style="display: flex; padding: .3em; justify-content: space-between;">
+                    <div id="lbl_dispensed">Dispensed:</div>
+                    <div id="dispensed" style="margin-left: 1.5em;">0.00</div>
+                </div>
+                <div style="display: flex; padding: .3em; justify-content: space-between;">
+                    <div id="lbl_not_dispensed">Not dispensed:</div>
+                    <div id="not_dispensed" style="margin-left: 1.5em;">0.00</div>
+                </div>
+                    <div>
+                        <button id="btn_cancel_payment" onclick="cancelClick()" style="color: white; background-color: #d72638; padding: 16px; margin-top: 16px; border: 2px solid #A01220; border-radius: 8px;">
+                            Cancel
+                        </button>
+                        <button id="btn_ok" onclick="okClick()" style="color: white; background-color: #00aa13; padding: 16px; margin-top: 16px; border: 2px solid green; border-radius: 8px; ">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
