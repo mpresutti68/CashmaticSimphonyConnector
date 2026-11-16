@@ -19,6 +19,8 @@ internal class Settings
 
   public string IpAddress { get; set; } = string.Empty;
 
+  public bool Test { get; set; } = false;
+
   public int PaymentNumber { get; set; } = 101;
 
   public int RoundingPoint { get; set; }
@@ -98,5 +100,13 @@ internal class Settings
     if (str12 == null)
       str12 = string.Empty;
     this.CultureInsertedAmount = str12;
-  }
+    string str13 = ((IEnumerable<string>)source).FirstOrDefault<string>((Func<string, bool>)(x => x.Contains("test")));
+    string str14;
+    if (str13 == null)
+        str14 = (string)null;
+    else
+        str14 = ((IEnumerable<string>)str13.Split('=')).Last<string>();
+        if (str14 != null)
+            this.Test = (str14 == "1");
+    }
 }

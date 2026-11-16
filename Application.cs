@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 using CashmaticSimphonyConnector.DialogsContext;
 using CashmaticSimphonyConnector.Models;
 using CashmaticSimphonyConnector.Source;
@@ -32,92 +33,129 @@ public class Application : OpsExtensibilityApplication
   {
     this.Logger.LogAlways("DLL init");
     this.settings.Parse(this.DataStore.ReadExtensionApplicationContentTextByNameKey(this.OpsContext.RvcID, this.ApplicationName, "Settings"));
+        //New Rtt vers
     ReadDataExtension();
+        //end
     this.api = new CashmaticApi(this.settings.IpAddress, this.settings.Username, this.settings.Password, this.Logger);
     this.translations.Parse(this.DataStore.ReadExtensionApplicationContentTextByNameKey(this.OpsContext.RvcID, this.ApplicationName, "Translations"));
     this.translations.Initialize(this.GetCurrentLanguage());
   }
-
+    //New Rtt vers
     private void ReadDataExtension()
     {
         int wksid = OpsContext.WorkstationID;
         string nomecolip = "CashMatic_ipaddrress";
         string nomecoluser = "CashMatic_user";
         string nomecolpwd = "CashMatic_pwd";
+        string nomepayment = "CashMatic_payment_number";
+        string nomecultureinfo = "CashMatic_culture_requested_amount";
         string table = "Workstation";
         string[] campi = DataStore.ReadExtensionDataValues(table);
-        if (campi.Contains(nomecolip)) settings.IpAddress = DataStore.ReadExtensionDataValue(table, nomecolip, wksid);
-        if (campi.Contains(nomecoluser)) settings.Username = DataStore.ReadExtensionDataValue(table, nomecoluser, wksid);
-        if (campi.Contains(nomecolpwd)) settings.Password = DataStore.ReadExtensionDataValue(table, nomecolpwd, wksid);
-        
+        if (campi.Contains(nomecolip) && !string.IsNullOrWhiteSpace(nomecolip)) settings.IpAddress = DataStore.ReadExtensionDataValue(table, nomecolip, wksid);
+        if (campi.Contains(nomecoluser) && !string.IsNullOrWhiteSpace(nomecoluser)) settings.Username = DataStore.ReadExtensionDataValue(table, nomecoluser, wksid);
+        if (campi.Contains(nomepayment) && !string.IsNullOrWhiteSpace(nomepayment)) settings.PaymentNumber = int.Parse(DataStore.ReadExtensionDataValue(table, nomepayment, wksid));
+        if (campi.Contains(nomecolpwd) && !string.IsNullOrWhiteSpace(nomecolpwd)) settings.Password = DataStore.ReadExtensionDataValue(table, nomecolpwd, wksid);
+        if (campi.Contains(nomecultureinfo) && !string.IsNullOrWhiteSpace(nomecultureinfo)) settings.CultureRequestedAmount = DataStore.ReadExtensionDataValue(table, nomecultureinfo, wksid);
     }
-
-  [ExtensibilityMethod]
-  public void DoPaymentExtensionMethod()
-  {
-    try
+    
+    private int CheckPaymentNumber(object paymethod)
     {
-      this.Logger.LogAlways($"DoPaymentExtensionMethod with culture {this.OpsContext.CurrentCultureInfo} with total due {this.OpsContext.CheckTotalDue}");
-      double result;
-      if (!double.TryParse(this.OpsContext.CheckTotalDue, NumberStyles.Any, (IFormatProvider) new CultureInfo(string.IsNullOrEmpty(this.settings.CultureRequestedAmount) ? this.OpsContext.CurrentCultureInfo : this.settings.CultureRequestedAmount), out result))
-        this.Logger.Log((ELogLevel) (-1), "Parsing amount failed");
-      else if (result <= 0.0)
-      {
-        this.Logger.Log((ELogLevel) (-1), "No amount provided " + this.OpsContext.CheckTotalDue);
-      }
-      else
-      {
-        int amount = (int) (result * 100.0);
-        if (this.settings.RoundingPoint > 0)
+        if (paymethod != null && int.TryParse(paymethod.ToString(), out int paymentnumber))
         {
-          int num = amount;
-          amount = (int) (Math.Round((double) amount / (double) this.settings.RoundingPoint) * (double) this.settings.RoundingPoint);
-          if (num != amount)
-            this.Logger.Log((ELogLevel) (-1), $"Payment amount rounded from {num} to {amount}");
-        }
-        this.Logger.Log((ELogLevel) (-1), $"Starting payment for {amount}");
-        try
-        {
-          this.api.StartPayment(amount);
-        }
-        catch (Exception ex)
-        {
-          this.Logger.Log((ELogLevel) (-3), ex.Message);
-          this.OpsContext.ShowError(ex.Message);
-          return;
-        }
-        PaymentDialogContext paymentDialogContext = new PaymentDialogContext(ref this.api, this.Logger, this.translations);
-        ExtensibilityInPlaceHtmlDialogParameters dialogParameters = new ExtensibilityInPlaceHtmlDialogParameters();
-        dialogParameters.HTML = this.GetHtmlDialogFromResource("PaymentDialog");
-        ((ExtensibilityHtmlDialogParameters) dialogParameters).Context = (object) paymentDialogContext;
-        this.OpsContext.ShowExtensibilityHtmlDialog((ExtensibilityHtmlDialogParameters) dialogParameters);
-        if (paymentDialogContext.TransactionDetails == null)
-        {
-          this.OpsContext.ShowError("Transaction window closed forcefully");
+             return paymentnumber;
         }
         else
         {
-          if (!(paymentDialogContext.TransactionDetails.End == "normal"))
-            return;
-          CultureInfo provider = string.IsNullOrEmpty(this.settings.CultureInsertedAmount) ? CultureInfo.CurrentCulture : new CultureInfo(this.settings.CultureInsertedAmount);
-          string str = ((double) paymentDialogContext.TransactionDetails.Inserted / 100.0).ToString("F2", (IFormatProvider) provider) ?? "";
-          this.Logger.Log((ELogLevel) (-1), "Closed payment with " + str);
-          new OpsChangeDueRequest().AmountTendered = str;
-          this.OpsContext.ProcessCommand(new OpsCommand()
-          {
-            Command = (OpsCommandType) 2008,
-            Number = (long) this.settings.PaymentNumber,
-            Arguments = "Cash:Cash $ " + str
-          });
+            this.Logger.Log((ELogLevel)(-1), "Payment number parsing failed, keeping current value");
+            return this.settings.PaymentNumber;
         }
-      }
     }
-    catch (Exception ex)
+    [ExtensibilityMethod]
+    public void DoPaymentExtensionMethod()
     {
-      this.Logger.Log((ELogLevel) (-3), $"Unhandled exception {ex.Message} - {ex}");
-      throw;
+        DoPaymentExtensionMethod(null);
     }
-  }
+        
+    [ExtensibilityMethod]
+    public void DoPaymentExtensionMethod(object paymethod)
+    {
+        try
+        {
+            int paymentNumber = CheckPaymentNumber(paymethod);
+            this.Logger.LogAlways($"DoPaymentExtensionMethod with culture {this.OpsContext.CurrentCultureInfo} with total due {this.OpsContext.CheckTotalDue}");
+            double result;
+            if (!double.TryParse(this.OpsContext.CheckTotalDue, NumberStyles.Any, (IFormatProvider) new CultureInfo(string.IsNullOrEmpty(this.settings.CultureRequestedAmount) ? this.OpsContext.CurrentCultureInfo : this.settings.CultureRequestedAmount), out result))
+                this.Logger.Log((ELogLevel) (-1), "Parsing amount failed");
+            else if (result <= 0.0)
+            {
+                this.Logger.Log((ELogLevel) (-1), "No amount provided " + this.OpsContext.CheckTotalDue);
+            }
+            else
+            {
+                int amount = (int) (result * 100.0);
+                if (this.settings.RoundingPoint > 0)
+                {
+                    int num = amount;
+                    amount = (int) (Math.Round((double) amount / (double) this.settings.RoundingPoint) * (double) this.settings.RoundingPoint);
+                    if (num != amount)
+                        this.Logger.Log((ELogLevel) (-1), $"Payment amount rounded from {num} to {amount}");
+                }
+                if (!this.settings.Test)
+                {
+                    this.Logger.Log((ELogLevel)(-1), $"Starting payment for {amount}");
+                    try
+                    { 
+                        this.api.StartPayment(amount);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger.Log((ELogLevel)(-3), ex.Message);
+                        this.OpsContext.ShowError(ex.Message);
+                        return;
+                    }
+                    PaymentDialogContext paymentDialogContext = new PaymentDialogContext(ref this.api, this.Logger, this.translations);
+                    ExtensibilityInPlaceHtmlDialogParameters dialogParameters = new ExtensibilityInPlaceHtmlDialogParameters();
+                    dialogParameters.HTML = this.GetHtmlDialogFromResource("PaymentDialog");
+                    ((ExtensibilityHtmlDialogParameters)dialogParameters).Context = (object)paymentDialogContext;
+                    this.OpsContext.ShowExtensibilityHtmlDialog((ExtensibilityHtmlDialogParameters)dialogParameters);
+                    if (paymentDialogContext.TransactionDetails == null)
+                    {
+                        this.OpsContext.ShowError("Transaction window closed forcefully");
+                        return;
+                    }
+                    if (!(paymentDialogContext.TransactionDetails.End == "normal"))
+                        return;
+                }
+                if (paymentNumber !=0)
+                {
+                    //CloseCheck((double)paymentDialogContext.TransactionDetails.Inserted / 100.0);
+                    CloseCheck((double)amount / 100.0, paymentNumber);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            this.Logger.Log((ELogLevel) (-3), $"Unhandled exception {ex.Message} - {ex}");
+            throw;
+         }
+    }
+
+  
+
+    private void CloseCheck(double importo, int paymentNumber)
+    {
+        CultureInfo provider = string.IsNullOrEmpty(this.settings.CultureInsertedAmount) ? CultureInfo.CurrentCulture : new CultureInfo(this.settings.CultureInsertedAmount);
+        //string str = ((double)paymentDialogContext.TransactionDetails.Inserted / 100.0).ToString("F2", (IFormatProvider)provider) ?? "";
+        string str = ((importo).ToString("F2", (IFormatProvider)provider)) ?? "";
+        this.Logger.Log((ELogLevel)(-1), "Closed payment with " + str);
+        new OpsChangeDueRequest().AmountTendered = str;
+        this.OpsContext.ProcessCommand(new OpsCommand()
+        {
+            Command = (OpsCommandType)2008,
+            Number = (long)paymentNumber,
+            Arguments = "Cash:Cash $ " + str
+        });
+    }
 
   private string GetCurrentLanguage()
   {

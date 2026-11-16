@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A30CD7EF-57C7-477E-B99E-4050A6109318}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AssemblyName>CashmaticSimphonyConnector</AssemblyName>
+    <AssemblyName>CashmaticSimphonyConnectorRtt</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <ApplicationVersion>1.0.0.10</ApplicationVersion>
     <FileAlignment>512</FileAlignment>
@@ -74,10 +74,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /y "CashmaticSimphonyConnector.dll" "C:\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector"
-attrib +R "C:\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector\CashmaticSimphonyConnector.dll"</PostBuildEvent>
+    <PostBuildEvent>xcopy /y "CashmaticSimphonyConnectorRtt.dll" "C:\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector"
+attrib +R "C:\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector\CashmaticSimphonyConnectorRtt.dll"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>attrib -R "C:\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector\CashmaticSimphonyConnector.dll"</PreBuildEvent>
+    <PreBuildEvent>attrib -R "C:\Micros\Simphony\WebServer\wwwroot\EGateway\Handlers\ExtensionApplications\CashmaticSimphonyConnector\CashmaticSimphonyConnectorRtt.dll"</PreBuildEvent>
   </PropertyGroup>
 </Project>
